@@ -14,6 +14,7 @@ const CONFIG = {
 class MultiTwitchApp {
     constructor() {
         this.streamers = [];
+        this.players = {}; // Track player instances
         this.activeChat = null;
 
         // DOM Elements
@@ -602,6 +603,14 @@ class MultiTwitchApp {
     }
 
     removeStreamer(name) {
+        // Cleanup player instance if exists (Twitch)
+        if (this.players[name]) {
+            // Can't really destroy, but removing reference helps.
+            // If the library had a destroy method we'd call it.
+            // For now, let's just ensure we don't hold onto it.
+            delete this.players[name];
+        }
+
         this.streamers = this.streamers.filter(s => s !== name);
         this.updateURL();
 
@@ -705,7 +714,8 @@ class MultiTwitchApp {
             embedDiv.id = `twitch-embed-${id}`;
             container.appendChild(embedDiv);
 
-            new Twitch.Embed(`twitch-embed-${id}`, options);
+            const player = new Twitch.Embed(`twitch-embed-${id}`, options);
+            this.players[identifier] = player;
         } else if (type === 'kick') {
             const iframe = document.createElement('iframe');
             iframe.src = `https://player.kick.com/${id}?muted=${this.settings.muted}&autoplay=true`;
