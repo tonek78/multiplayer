@@ -45,7 +45,8 @@ body {
     background: rgba(0, 0, 0, 0.7);
     border: 1px solid var(--border);
     color: white;
-    padding: 8px;
+    padding: 12px;
+    /* Larger touch target */
     border-radius: 4px;
     cursor: pointer;
 }
@@ -580,8 +581,15 @@ body {
     .sidebar {
         position: absolute;
         height: 100%;
+        width: 80%;
+        /* Relative width */
+        max-width: 300px;
+        /* Cap it */
         transform: translateX(-100%);
         box-shadow: 5px 0 15px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(10px);
+        /* Modern feel */
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .sidebar.mobile-open {
@@ -599,8 +607,11 @@ body {
         box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
         margin-right: 0;
         display: flex !important;
-        /* Always flex, just transformed */
-        z-index: 50;
+        z-index: 60;
+        /* Higher than sidebar potentially if overlapped */
+        background: rgba(24, 24, 27, 0.95);
+        /* Slight transparency */
+        backdrop-filter: blur(10px);
     }
 
     /* When not hidden (active) on mobile */
@@ -633,11 +644,13 @@ body {
         width: 100% !important;
         height: auto !important;
         aspect-ratio: 16/9;
-        min-height: 250px;
-        /* Fallback height */
+        /* Remove fixed min-height to allow natural aspect scaling, 
+           but keep enough to be usable if ratio fails */
+        min-height: 200px;
         flex-grow: 0;
         background: #000;
-        /* Ensure visible background */
+        margin-bottom: 2px;
+        /* Slight separation */
     }
 }
 
