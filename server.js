@@ -14,7 +14,10 @@ const REDIRECT_URI = process.env.TWITCH_REDIRECT_URI || 'http://localhost:3000/a
 let twitchAccessToken = null;
 
 // Middleware to serve static files
-app.use(express.static(path.join(__dirname, 'public')));
+// Only serve static files if running standalone (not on Netlify Functions)
+if (require.main === module) {
+    app.use(express.static(path.join(__dirname, 'public')));
+}
 
 // API Router
 const router = express.Router();
@@ -239,9 +242,12 @@ app.use('/.netlify/functions/api', router);
 
 
 // SPA Fallback: Serve index.html for any other route
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+// Only use this fallback if running standalone. Netlify handles SPA rewrites via netlify.toml
+if (require.main === module) {
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    });
+}
 
 // Export app for Netlify
 module.exports = app;
