@@ -19,8 +19,9 @@ if (require.main === module) {
     app.use(express.static(path.join(__dirname, 'public')));
 }
 
-// API Router
-const router = express.Router();
+// Routers
+const apiRouter = express.Router();
+const authRouter = express.Router();
 
 // Helper to get Access Token
 async function getTwitchAccessToken() {
@@ -42,7 +43,7 @@ async function getTwitchAccessToken() {
 }
 
 // API Endpoint to get stream info
-router.get('/stream/:user', async (req, res) => {
+apiRouter.get('/stream/:user', async (req, res) => {
     const user = req.params.user;
 
     // Default response
@@ -136,13 +137,14 @@ router.get('/stream/:user', async (req, res) => {
 });
 
 // Auth Routes
-router.get('/auth/twitch', (req, res) => {
+// Note: Mounted at /auth locally and /.netlify/functions/api/auth on Netlify
+authRouter.get('/twitch', (req, res) => {
     const scope = 'user:read:follows';
     const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=${scope}`;
     res.redirect(authUrl);
 });
 
-router.get('/auth/callback', async (req, res) => {
+authRouter.get('/callback', async (req, res) => {
     const code = req.query.code;
 
     if (!code) {
@@ -198,7 +200,7 @@ router.get('/auth/callback', async (req, res) => {
 });
 
 // API Endpoint to search channels
-router.get('/search', async (req, res) => {
+apiRouter.get('/search', async (req, res) => {
     const query = req.query.q;
     if (!query) return res.json([]);
 
@@ -235,10 +237,13 @@ router.get('/search', async (req, res) => {
 });
 
 // Configure Routes
-// Local: /api/stream -> Router
-// Netlify: /.netlify/functions/api/stream -> Router
-app.use('/api', router);
-app.use('/.netlify/functions/api', router);
+// Local
+app.use('/api', apiRouter);
+app.use('/auth', authRouter);
+
+// Netlify
+app.use('/.netlify/functions/api', apiRouter);
+app.use('/.netlify/functions/api/auth', authRouter);
 
 
 // SPA Fallback: Serve index.html for any other route
