@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="hu">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MultiTwitch - Advanced Stream Viewer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <!-- Twitch Embed Script -->
+    <script src="https://embed.twitch.tv/embed/v1.js"></script>
+</head>
+
+<body>
+
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </button>
+
+    <div class="app-container">
+        <!-- Sidebar / Control Panel -->
+        <nav class="sidebar" id="sidebar">
+            <div class="brand">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M21 10.5V3.75C21 3.33579 20.6642 3 20.25 3H3.75C3.33579 3 3 3.33579 3 3.75V20.25C3 20.6642 3.33579 21 3.75 21H13.5"
+                        stroke="#a970ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M16.5 21V16.5H12V21" stroke="#a970ff" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    <path d="M21 16.5V21H16.5" stroke="#a970ff" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    <path d="M7.5 7.5H10.5V12H7.5" stroke="#a970ff" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    <path d="M13.5 7.5H16.5V12H13.5" stroke="#a970ff" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+                <a href="/" class="brand-name"><span>MultiTwitch</span> </a>
+
+            </div>
+
+
+
+            <div class="saved-groups-section">
+                <div class="section-header">
+                    <span>Saved Groups</span>
+                    <button id="saveGroupBtn" class="icon-btn-small" title="Save current group">+</button>
+                </div>
+                <div id="savedGroupsList" class="saved-groups-list">
+                    <!-- Groups here -->
+                </div>
+            </div>
+
+            <div class="active-streams-list" id="activeStreamsList">
+                <!-- Streamers will be listed here -->
+            </div>
+
+            <div class="sidebar-footer">
+                <a href="/auth/twitch" class="icon-btn" title="Import Live Follows"
+                    style="display:flex; align-items:center; justify-content:center; text-decoration:none;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                        <polyline points="10 17 15 12 10 7"></polyline>
+                        <line x1="15" y1="12" x2="3" y2="12"></line>
+                    </svg>
+                </a>
+                <button id="settingsBtn" class="icon-btn" title="Settings">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                    </svg>
+                </button>
+                <button id="layoutToggle" class="icon-btn" title="Change Layout">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                </button>
+                <button id="chatToggle" class="icon-btn active" title="Toggle Chat">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="input-group-wrapper" style="position: relative;">
+                    <div class="input-group">
+                        <input type="text" id="streamInput" placeholder="Add streamer..." autocomplete="off">
+                        <button id="addStreamBtn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="searchResults" class="search-results hidden"></div>
+                </div>
+            </div>
+            <div id="streamGrid" class="stream-grid">
+                <!-- Streams will be injected here -->
+                <div class="empty-state" id="emptyState">
+                    <h2>Welcome to MultiTwitch</h2>
+                    <p>Add a streamer in the sidebar to get started.</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Chat Sidebar (Right) -->
+        <aside class="chat-sidebar" id="chatSidebar">
+            <div class="chat-header">
+                <div id="chatTabs" class="chat-tabs">
+                    <!-- Tabs will be injected here -->
+                </div>
+                <button id="closeChatBtn" class="icon-btn-small">✕</button>
+            </div>
+            <div id="chatContainer" class="chat-container">
+                <!-- Chat Embed goes here -->
+            </div>
+        </aside>
+    </div>
+
+    <!-- Prompt Modal -->
+    <div id="promptModal" class="modal-overlay">
+        <div class="modal">
+            <h3 class="modal-title" id="promptTitle">Enter Name</h3>
+            <input type="text" id="promptInput" class="modal-input" placeholder="Type here..." autocomplete="off">
+            <div class="modal-actions">
+                <button id="promptCancel" class="modal-btn cancel">Cancel</button>
+                <button id="promptOk" class="modal-btn delete" style="background:var(--accent)">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast">Group Saved!</div>
+
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal">
+            <h3 class="modal-title">Confirm Delete</h3>
+            <p class="modal-message" id="confirmMessage">Are you sure you want to delete this group?</p>
+            <div class="modal-actions">
+                <button id="confirmCancel" class="modal-btn cancel">Cancel</button>
+                <button id="confirmOk" class="modal-btn delete">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Group Modal -->
+    <div id="editGroupModal" class="modal-overlay">
+        <div class="modal" style="max-width: 500px;">
+            <h3 class="modal-title" id="editGroupTitle">Edit Group</h3>
+
+            <div class="input-group" style="margin-bottom: 1rem;">
+                <input type="text" id="editGroupAddInput" class="modal-input" placeholder="Add streamer..."
+                    style="margin-bottom:0">
+                <button id="editGroupAddBtn" class="modal-btn"
+                    style="background:var(--accent); color:white;">Add</button>
+            </div>
+
+            <div id="editGroupList" class="edit-group-list">
+                <!-- Streamers list -->
+            </div>
+
+            <div class="modal-actions" style="margin-top: 1rem;">
+                <button id="editGroupCancel" class="modal-btn cancel">Cancel</button>
+                <button id="editGroupSave" class="modal-btn" style="background:var(--accent); color:white;">Save
+                    Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal-overlay">
+        <div class="modal">
+            <h3 class="modal-title">Settings</h3>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display:block; margin-bottom:0.5rem; color:var(--text-secondary);">Theme Color</label>
+                <div class="color-swatches">
+                    <button class="color-swatch active" data-color="#9146FF" style="background:#9146FF"></button>
+                    <button class="color-swatch" data-color="#3b82f6" style="background:#3b82f6"></button>
+                    <button class="color-swatch" data-color="#10b981" style="background:#10b981"></button>
+                    <button class="color-swatch" data-color="#ef4444" style="background:#ef4444"></button>
+                    <button class="color-swatch" data-color="#f59e0b" style="background:#f59e0b"></button>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label class="checkbox-container">
+                    <input type="checkbox" id="settingMuted">
+                    <span class="checkmark"></span>
+                    Start streams muted
+                </label>
+            </div>
+
+            <div class="modal-actions">
+                <button id="settingsCancel" class="modal-btn cancel">Cancel</button>
+                <button id="settingsSave" class="modal-btn" style="background:var(--accent); color:white;">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/script.js"></script>
+</body>
+
+</html>
