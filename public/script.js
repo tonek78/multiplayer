@@ -81,7 +81,15 @@ class MultiTwitchApp {
         this.settingsModal = document.getElementById('settingsModal');
         this.settingsSave = document.getElementById('settingsSave');
         this.settingsCancel = document.getElementById('settingsCancel');
+        this.settingsSave = document.getElementById('settingsSave');
+        this.settingsCancel = document.getElementById('settingsCancel');
         this.settingMuted = document.getElementById('settingMuted');
+
+        // Help Modal
+        this.helpBtn = document.getElementById('helpBtn');
+        this.helpModal = document.getElementById('helpModal');
+        this.helpClose = document.getElementById('helpClose');
+
         this.colorSwatches = document.querySelectorAll('.color-swatch');
 
         this.init();
@@ -160,6 +168,17 @@ class MultiTwitchApp {
                 this.colorSwatches.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
             });
+        });
+
+        // Help Events
+        this.helpBtn.addEventListener('click', () => {
+            this.helpModal.classList.add('active');
+        });
+        this.helpClose.addEventListener('click', () => {
+            this.helpModal.classList.remove('active');
+        });
+        this.helpModal.addEventListener('click', (e) => {
+            if (e.target === this.helpModal) this.helpModal.classList.remove('active');
         });
 
         // Modal Events (Prompt)

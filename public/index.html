@@ -77,6 +77,13 @@
                         </path>
                     </svg>
                 </button>
+                <button id="helpBtn" class="icon-btn" title="Útmutató">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </button>
                 <button id="layoutToggle" class="icon-btn" title="Change Layout">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="3" width="7" height="7"></rect>
@@ -210,6 +217,38 @@
             <div class="modal-actions">
                 <button id="settingsCancel" class="modal-btn cancel">Cancel</button>
                 <button id="settingsSave" class="modal-btn" style="background:var(--accent); color:white;">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal-overlay">
+        <div class="modal" style="max-width: 500px;">
+            <h3 class="modal-title">Használati Útmutató</h3>
+
+            <div style="margin-bottom: 1.5rem; color: var(--text-secondary); font-size: 0.95rem;">
+                <p style="margin-bottom: 0.75rem;">
+                    Üdvözöllek a MultiTwitch-en! Ezzel az alkalmazással egyszerre több streamet is nézhetsz,
+                    chatelhetsz, és elmentheted a kedvenc csoportjaidat.
+                </p>
+
+                <h4 style="color:white; margin:1rem 0 0.5rem 0;">Hogyan adj hozzá streamet?</h4>
+                <ul style="padding-left: 1.2rem; line-height: 1.5;">
+                    <li>Írd be a streamer nevét (pl. <b>riotgames</b>)</li>
+                    <li>YouTube link (pl. <b>youtube.com/watch?v=...</b>)</li>
+                    <li>Kick link (pl. <b>kick.com/xqc</b>)</li>
+                </ul>
+
+                <h4 style="color:white; margin:1rem 0 0.5rem 0;">Funkciók</h4>
+                <ul style="padding-left: 1.2rem; line-height: 1.5;">
+                    <li><b>Mentett Csoportok (+):</b> Mentsd el a jelenleg megnyitott streameket.</li>
+                    <li><b>Beállítások (⚙️):</b> Válts színtémát vagy némítsd le az összeset.</li>
+                    <li><b>Chat:</b> A jobb oldali panelen válthatsz a csevegések között.</li>
+                </ul>
+            </div>
+
+            <div class="modal-actions">
+                <button id="helpClose" class="modal-btn" style="background:var(--accent); color:white;">Értem</button>
             </div>
         </div>
     </div>
