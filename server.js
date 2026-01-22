@@ -43,6 +43,11 @@ async function getTwitchAccessToken() {
 }
 
 // API Endpoint to get stream info
+apiRouter.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store');
+    next();
+});
+
 apiRouter.get('/stream/:user', async (req, res) => {
     const user = req.params.user;
 
@@ -69,13 +74,28 @@ apiRouter.get('/stream/:user', async (req, res) => {
                     const item = ytRes.data.items[0];
                     const isLive = item.liveStreamingDetails && !item.liveStreamingDetails.actualEndTime;
 
+                    let avatar = null;
+                    try {
+                        const channelId = item.snippet.channelId;
+                        if (channelId) {
+                            const chanRes = await axios.get('https://www.googleapis.com/youtube/v3/channels', {
+                                params: { part: 'snippet', id: channelId, key: apiKey }
+                            });
+                            if (chanRes.data.items && chanRes.data.items.length > 0) {
+                                avatar = chanRes.data.items[0].snippet.thumbnails.default.url;
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Channel fetch error:', e.message);
+                    }
+
                     return res.json({
                         online: isLive, // True if currently live
                         title: item.snippet.title,
                         game: item.snippet.channelTitle,
                         viewers: isLive ? (item.liveStreamingDetails.concurrentViewers || 0) : 0,
                         thumbnail: item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
-                        avatar: null,
+                        avatar: avatar,
                         is_vod: !isLive // Helper flag
                     });
                 }

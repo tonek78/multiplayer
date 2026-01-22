@@ -749,8 +749,26 @@ class MultiTwitchApp {
                 statusIndicator.classList.add('online');
                 // For YouTube: viewers is 0, so maybe don't show "0 • ChannelName"
                 if (identifier.startsWith('y:')) {
-                    // data.game hosts the Channel Name (author_name)
-                    infoSpan.textContent = data.game;
+                    // For YouTube:
+                    // data.game -> Channel Name
+                    // data.title -> Page Title (visible on hover) or we can swap
+                    // Let's make stream-info show Channel Name
+                    // And stream-name (displayName) show Video Title?
+                    // renderSidebarItem created: .stream-name = {Icon}{DisplayName}
+                    // .stream-info = Loading...
+
+                    // We want: 
+                    // Name: Video Title
+                    // Info: Channel Name
+
+                    const nameSpan = item.querySelector('.stream-name');
+                    if (nameSpan) {
+                        // Keep icon
+                        const icon = '<span style="color:#ff0000; font-weight:bold; font-size:0.8em; margin-right:4px;">▶</span>';
+                        nameSpan.innerHTML = `${icon}${data.title}`;
+                    }
+
+                    infoSpan.textContent = data.game; // Channel Name
                     item.setAttribute('title', data.title);
                 } else {
                     infoSpan.textContent = `${data.viewers.toLocaleString()} • ${data.game}`;
@@ -760,6 +778,8 @@ class MultiTwitchApp {
                 statusIndicator.classList.remove('online');
                 infoSpan.textContent = 'Offline';
             }
+
+            this.renderChatTabs();
         } catch (e) {
             console.error('Error fetching meta:', e);
         }
@@ -813,8 +833,8 @@ class MultiTwitchApp {
             displayName = identifier.substring(2);
             platformIcon = '<span style="color:#53fc18; font-weight:bold; font-size:0.8em; margin-right:4px;">[K]</span>'; // Kick green
         } else if (identifier.startsWith('y:')) {
-            displayName = 'YouTube Video'; // YouTube ID is ugly, maybe fetch title later?
-            platformIcon = '<span style="color:#ff0000; font-weight:bold; font-size:0.8em; margin-right:4px;">[YT]</span>';
+            displayName = 'YouTube Loading...';
+            platformIcon = '<span style="color:#ff0000; font-weight:bold; font-size:0.8em; margin-right:4px;">▶</span>';
         }
 
         const div = document.createElement('div');
@@ -946,7 +966,25 @@ class MultiTwitchApp {
             const btn = document.createElement('button');
             btn.className = 'chat-tab';
             if (s === this.activeChat) btn.classList.add('active');
-            btn.textContent = s;
+
+            // Try to find display name
+            let displayName = s;
+            if (s.startsWith('y:')) {
+                // For YouTube, try to get Channel Name from sidebar
+                const sidebarItem = document.querySelector(`.stream-item[data-name="${s}"]`);
+                if (sidebarItem) {
+                    const infoSpan = sidebarItem.querySelector('.stream-info');
+                    // infoSpan usually holds "Channel Name" or "Viewers • Game"
+                    // In our YouTube logic, we set infoSpan to Channel Name (data.game)
+                    if (infoSpan && infoSpan.textContent && infoSpan.textContent !== 'Loading...' && infoSpan.textContent !== 'Offline') {
+                        displayName = infoSpan.textContent;
+                    }
+                }
+            } else if (s.startsWith('k:')) {
+                displayName = s.substring(2);
+            }
+
+            btn.textContent = displayName;
             btn.onclick = () => this.loadChat(s);
             this.chatTabs.appendChild(btn);
         });
