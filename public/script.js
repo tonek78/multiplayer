@@ -714,13 +714,25 @@ class MultiTwitchApp {
     }
 
     async updateStreamerMetadata(identifier) {
-        // Skip metadata fetch for non-Twitch for now, just set basic info
+        // Kick Handling
         if (identifier.startsWith('k:')) {
             const item = document.querySelector(`.stream-item[data-name="${identifier}"]`);
             if (item) {
                 const infoSpan = item.querySelector('.stream-info');
-                infoSpan.textContent = 'Kick Stream';
+                const displayName = identifier.substring(2);
+
+                // Since we don't have real API data, assume online and set nice text
+                const statusIndicator = item.querySelector('.status-indicator');
+                statusIndicator.classList.add('online');
+
+                infoSpan.textContent = "Kick Stream";
+                item.setAttribute('title', `${displayName} on Kick`);
+
+                // Try to load avatar if we can guess it? No reliable way without API.
+                // We could try: https://kick.com/api/v1/users/{slug} but CORS will block.
             }
+            // Refresh tabs to show name if needed (kick names are usually static based on ID)
+            this.renderChatTabs();
             return;
         }
 
@@ -831,7 +843,11 @@ class MultiTwitchApp {
 
         if (identifier.startsWith('k:')) {
             displayName = identifier.substring(2);
-            platformIcon = '<span style="color:#53fc18; font-weight:bold; font-size:0.8em; margin-right:4px;">[K]</span>'; // Kick green
+            // Kick green icon or proper logo if we had one. 
+            // Using a simple SVG K or Kick logo placeholder
+            logo = "https://kick.com/favicon.ico"; // Try using favicon as avatar fallback? Or specific asset.
+            // Actually, let's use a nice SVG for the platform icon in the name, and the default avatar.
+            platformIcon = '<span style="color:#53fc18; font-weight:bold; font-size:0.8em; margin-right:4px;">K</span>';
         } else if (identifier.startsWith('y:')) {
             displayName = 'YouTube Loading...';
             platformIcon = '<span style="color:#ff0000; font-weight:bold; font-size:0.8em; margin-right:4px;">▶</span>';
@@ -981,6 +997,7 @@ class MultiTwitchApp {
                     }
                 }
             } else if (s.startsWith('k:')) {
+                // Kick ID is usually the username
                 displayName = s.substring(2);
             }
 
@@ -1002,7 +1019,9 @@ class MultiTwitchApp {
         if (identifier.startsWith('k:')) {
             const kickUser = identifier.substring(2);
             const iframe = document.createElement('iframe');
-            iframe.src = `https://kick.com/kick-token/chatroom/${kickUser}`;
+            // Try standard chat URL. 
+            // Note: If Kick blocks this via X-Frame-Options, we might need a "Popout" button instead.
+            iframe.src = `https://kick.com/${kickUser}/chat`;
             iframe.style.width = '100%';
             iframe.style.height = '100%';
             iframe.style.border = 'none';
