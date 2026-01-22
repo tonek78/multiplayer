@@ -48,8 +48,9 @@
 
             <div class="saved-groups-section">
                 <div class="section-header">
-                    <span>Saved Groups</span>
-                    <button id="saveGroupBtn" class="icon-btn-small" title="Save current group">+</button>
+                    <span data-i18n="savedGroups">Saved Groups</span>
+                    <button id="saveGroupBtn" class="icon-btn-small" data-i18n-title="saveGroupBtn"
+                        title="Save current group">+</button>
                 </div>
                 <div id="savedGroupsList" class="saved-groups-list">
                     <!-- Groups here -->
@@ -105,7 +106,8 @@
             <div class="top-bar">
                 <div class="input-group-wrapper" style="position: relative;">
                     <div class="input-group">
-                        <input type="text" id="streamInput" placeholder="Add streamer..." autocomplete="off">
+                        <input type="text" id="streamInput" data-i18n-placeholder="addStreamerPlaceholder"
+                            placeholder="Add streamer..." autocomplete="off">
                         <button id="addStreamBtn">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
@@ -113,15 +115,15 @@
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                             </svg>
                         </button>
+                        <div id="searchResults" class="search-results hidden"></div>
                     </div>
-                    <div id="searchResults" class="search-results hidden"></div>
                 </div>
             </div>
             <div id="streamGrid" class="stream-grid">
                 <!-- Streams will be injected here -->
                 <div class="empty-state" id="emptyState">
-                    <h2>Welcome to MultiTwitch</h2>
-                    <p>Add a streamer in the sidebar to get started.</p>
+                    <h2 data-i18n="welcomeTitle">Welcome to MultiTwitch</h2>
+                    <p data-i18n="welcomeText">Add a streamer in the sidebar to get started.</p>
                 </div>
             </div>
         </main>
@@ -153,15 +155,15 @@
     </div>
 
     <!-- Notification Toast -->
-    <div id="toast" class="toast">Group Saved!</div>
+    <div id="toast" class="toast"></div>
 
     <div id="confirmModal" class="modal-overlay">
         <div class="modal">
             <h3 class="modal-title">Confirm Delete</h3>
             <p class="modal-message" id="confirmMessage">Are you sure you want to delete this group?</p>
             <div class="modal-actions">
-                <button id="confirmCancel" class="modal-btn cancel">Cancel</button>
-                <button id="confirmOk" class="modal-btn delete">Delete</button>
+                <button id="confirmCancel" class="modal-btn cancel" data-i18n="cancel">Cancel</button>
+                <button id="confirmOk" class="modal-btn delete" data-i18n="delete">Delete</button>
             </div>
         </div>
     </div>
@@ -183,8 +185,9 @@
             </div>
 
             <div class="modal-actions" style="margin-top: 1rem;">
-                <button id="editGroupCancel" class="modal-btn cancel">Cancel</button>
-                <button id="editGroupSave" class="modal-btn" style="background:var(--accent); color:white;">Save
+                <button id="editGroupCancel" class="modal-btn cancel" data-i18n="cancel">Cancel</button>
+                <button id="editGroupSave" class="modal-btn" style="background:var(--accent); color:white;"
+                    data-i18n="saveChanges">Save
                     Changes</button>
             </div>
         </div>
@@ -193,10 +196,21 @@
     <!-- Settings Modal -->
     <div id="settingsModal" class="modal-overlay">
         <div class="modal">
-            <h3 class="modal-title">Settings</h3>
+            <h3 class="modal-title" data-i18n="settingsTitle">Settings</h3>
 
             <div style="margin-bottom: 1.5rem;">
-                <label style="display:block; margin-bottom:0.5rem; color:var(--text-secondary);">Theme Color</label>
+                <label style="display:block; margin-bottom:0.5rem; color:var(--text-secondary);"
+                    data-i18n="language">Language</label>
+                <select id="settingLanguage" class="modal-input"
+                    style="width:100%; border:1px solid #333; background:#222; color:white; padding:0.5rem; border-radius:4px;">
+                    <option value="hu">Magyar</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display:block; margin-bottom:0.5rem; color:var(--text-secondary);"
+                    data-i18n="themeColor">Theme Color</label>
                 <div class="color-swatches">
                     <button class="color-swatch active" data-color="#9146FF" style="background:#9146FF"></button>
                     <button class="color-swatch" data-color="#3b82f6" style="background:#3b82f6"></button>
@@ -210,13 +224,14 @@
                 <label class="checkbox-container">
                     <input type="checkbox" id="settingMuted">
                     <span class="checkmark"></span>
-                    Start streams muted
+                    <span data-i18n="startMuted">Start streams muted</span>
                 </label>
             </div>
 
             <div class="modal-actions">
-                <button id="settingsCancel" class="modal-btn cancel">Cancel</button>
-                <button id="settingsSave" class="modal-btn" style="background:var(--accent); color:white;">Save</button>
+                <button id="settingsCancel" class="modal-btn cancel" data-i18n="cancel">Cancel</button>
+                <button id="settingsSave" class="modal-btn" style="background:var(--accent); color:white;"
+                    data-i18n="save">Save</button>
             </div>
         </div>
     </div>
@@ -224,23 +239,23 @@
     <!-- Help Modal -->
     <div id="helpModal" class="modal-overlay">
         <div class="modal" style="max-width: 500px;">
-            <h3 class="modal-title">Használati Útmutató</h3>
+            <h3 class="modal-title" data-i18n="helpTitle">Használati Útmutató</h3>
 
             <div style="margin-bottom: 1.5rem; color: var(--text-secondary); font-size: 0.95rem;">
-                <p style="margin-bottom: 0.75rem;">
+                <p style="margin-bottom: 0.75rem;" data-i18n="helpIntro">
                     Üdvözöllek a MultiTwitch-en! Ezzel az alkalmazással egyszerre több streamet is nézhetsz,
                     chatelhetsz, és elmentheted a kedvenc csoportjaidat.
                 </p>
 
-                <h4 style="color:white; margin:1rem 0 0.5rem 0;">Hogyan adj hozzá streamet?</h4>
-                <ul style="padding-left: 1.2rem; line-height: 1.5;">
+                <h4 style="color:white; margin:1rem 0 0.5rem 0;" data-i18n="howToAdd">Hogyan adj hozzá streamet?</h4>
+                <ul style="padding-left: 1.2rem; line-height: 1.5;" data-i18n="howToAddList">
                     <li>Írd be a streamer nevét (pl. <b>riotgames</b>)</li>
                     <li>YouTube link (pl. <b>youtube.com/watch?v=...</b>)</li>
                     <li>Kick link (pl. <b>kick.com/xqc</b>)</li>
                 </ul>
 
-                <h4 style="color:white; margin:1rem 0 0.5rem 0;">Funkciók</h4>
-                <ul style="padding-left: 1.2rem; line-height: 1.5;">
+                <h4 style="color:white; margin:1rem 0 0.5rem 0;" data-i18n="minFeatures">Funkciók</h4>
+                <ul style="padding-left: 1.2rem; line-height: 1.5;" data-i18n="featuresList">
                     <li><b>Mentett Csoportok (+):</b> Mentsd el a jelenleg megnyitott streameket.</li>
                     <li><b>Beállítások (⚙️):</b> Válts színtémát vagy némítsd le az összeset.</li>
                     <li><b>Chat:</b> A jobb oldali panelen válthatsz a csevegések között.</li>
@@ -248,7 +263,8 @@
             </div>
 
             <div class="modal-actions">
-                <button id="helpClose" class="modal-btn" style="background:var(--accent); color:white;">Értem</button>
+                <button id="helpClose" class="modal-btn" style="background:var(--accent); color:white;"
+                    data-i18n="understood">Értem</button>
             </div>
         </div>
     </div>

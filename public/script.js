@@ -11,6 +11,65 @@ const CONFIG = {
     }
 };
 
+const TRANSLATIONS = {
+    "en": {
+        "savedGroups": "Saved Groups",
+        "saveGroupBtn": "Save current group",
+        "settingsTitle": "Settings",
+        "themeColor": "Theme Color",
+        "startMuted": "Start streams muted",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "confirmDelete": "Are you sure you want to delete this group?",
+        "editGroup": "Edit Group",
+        "saveChanges": "Save Changes",
+        "addStreamerPlaceholder": "Add streamer...",
+        "enterName": "Enter Name",
+        "welcomeTitle": "Welcome to MultiTwitch",
+        "welcomeText": "Add a streamer in the sidebar to get started.",
+        "helpTitle": "Guide",
+        "helpIntro": "Welcome to MultiTwitch! Watch multiple streams, chat, and save your favorite groups.",
+        "howToAdd": "How to add a stream?",
+        "howToAddList": "<li>Type streamer name (e.g. <b>riotgames</b>)</li><li>YouTube link (e.g. <b>youtube.com/watch?v=...</b>)</li><li>Kick link (e.g. <b>kick.com/xqc</b>)</li>",
+        "minFeatures": "Features",
+        "featuresList": "<li><b>Saved Groups (+):</b> Save your current open streams.</li><li><b>Settings (⚙️):</b> Change theme or mute all.</li><li><b>Chat:</b> Switch between chats in the right panel.</li>",
+        "understood": "Got it",
+        "toastSaved": "Group Saved!",
+        "toastUpdated": "Group updated!",
+        "toastSettingsSaved": "Settings saved!",
+        "language": "Language"
+    },
+    "hu": {
+        "savedGroups": "Mentett Csoportok",
+        "saveGroupBtn": "Jelenlegi csoport mentése",
+        "settingsTitle": "Beállítások",
+        "themeColor": "Téma Szín",
+        "startMuted": "Streamek némítva induljanak",
+        "save": "Mentés",
+        "cancel": "Mégse",
+        "delete": "Törlés",
+        "confirmDelete": "Biztosan törölni szeretnéd ezt a csoportot?",
+        "editGroup": "Csoport Szerkesztése",
+        "saveChanges": "Változások Mentése",
+        "addStreamerPlaceholder": "Streamer hozzáadása...",
+        "enterName": "Név megadása",
+        "welcomeTitle": "Üdvözöl a MultiTwitch",
+        "welcomeText": "Adj hozzá egy streamert a sávban a kezdéshez.",
+        "helpTitle": "Használati Útmutató",
+        "helpIntro": "Üdvözöllek a MultiTwitch-en! Ezzel az alkalmazással egyszerre több streamet is nézhetsz, chatelhetsz, és elmentheted a kedvenc csoportjaidat.",
+        "howToAdd": "Hogyan adj hozzá streamet?",
+        "howToAddList": "<li>Írd be a streamer nevét (pl. <b>riotgames</b>)</li><li>YouTube link (pl. <b>youtube.com/watch?v=...</b>)</li><li>Kick link (pl. <b>kick.com/xqc</b>)</li>",
+        "minFeatures": "Funkciók",
+        "featuresList": "<li><b>Mentett Csoportok (+):</b> Mentsd el a jelenleg megnyitott streameket.</li><li><b>Beállítások (⚙️):</b> Válts színtémát vagy némítsd le az összeset.</li><li><b>Chat:</b> A jobb oldali panelen válthatsz a csevegések között.</li>",
+        "understood": "Értem",
+        "toastSaved": "Csoport Mentve!",
+        "toastUpdated": "Csoport frissítve!",
+        "toastSettingsSaved": "Beállítások mentve!",
+        "language": "Nyelv"
+    }
+};
+
 class MultiTwitchApp {
     constructor() {
         this.streamers = [];
@@ -75,7 +134,8 @@ class MultiTwitchApp {
         // Settings
         this.settings = {
             theme: '#9146FF',
-            muted: false
+            muted: false,
+            language: 'hu' // Default language
         };
         this.settingsBtn = document.getElementById('settingsBtn');
         this.settingsModal = document.getElementById('settingsModal');
@@ -84,6 +144,7 @@ class MultiTwitchApp {
         this.settingsSave = document.getElementById('settingsSave');
         this.settingsCancel = document.getElementById('settingsCancel');
         this.settingMuted = document.getElementById('settingMuted');
+        this.settingLanguage = document.getElementById('settingLanguage');
 
         // Help Modal
         this.helpBtn = document.getElementById('helpBtn');
@@ -573,7 +634,11 @@ class MultiTwitchApp {
         if (saved) {
             this.settings = { ...this.settings, ...JSON.parse(saved) };
         }
+        // Ensure valid language
+        if (!['en', 'hu'].includes(this.settings.language)) this.settings.language = 'hu';
+
         this.applySettings();
+        this.applyLanguage();
     }
 
     applySettings() {
@@ -587,6 +652,7 @@ class MultiTwitchApp {
     openSettings() {
         // Set UI to current state
         this.settingMuted.checked = this.settings.muted;
+        this.settingLanguage.value = this.settings.language;
         this.colorSwatches.forEach(btn => {
             btn.classList.toggle('active', btn.dataset.color === this.settings.theme);
         });
@@ -595,6 +661,7 @@ class MultiTwitchApp {
 
     saveSettings() {
         this.settings.muted = this.settingMuted.checked;
+        this.settings.language = this.settingLanguage.value;
         const activeSwatch = document.querySelector('.color-swatch.active');
         if (activeSwatch) {
             this.settings.theme = activeSwatch.dataset.color;
@@ -602,8 +669,48 @@ class MultiTwitchApp {
 
         localStorage.setItem('twitchSettings', JSON.stringify(this.settings));
         this.applySettings();
-        this.showNotification("Settings saved!");
+        this.applyLanguage();
+        // Reload to apply deeply nested changes if needed, but for now replacement should work
+        this.showNotification(this.t('toastSettingsSaved'));
         this.settingsModal.classList.remove('active');
+    }
+
+    t(key) {
+        return TRANSLATIONS[this.settings.language][key] || key;
+    }
+
+    applyLanguage() {
+        const lang = this.settings.language;
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (TRANSLATIONS[lang][key]) {
+                // Handle lists specially if needed, or just HTML
+                if (key.includes('List')) {
+                    el.innerHTML = TRANSLATIONS[lang][key];
+                } else {
+                    el.textContent = TRANSLATIONS[lang][key];
+                }
+            }
+        });
+
+        // Update placeholders
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            if (TRANSLATIONS[lang][key]) {
+                el.placeholder = TRANSLATIONS[lang][key];
+            }
+        });
+
+        // Update titles
+        document.querySelectorAll('[data-i18n-title]').forEach(el => {
+            const key = el.getAttribute('data-i18n-title');
+            if (TRANSLATIONS[lang][key]) {
+                el.title = TRANSLATIONS[lang][key];
+            }
+        });
+
+        // Update dynamic content via re-render if needed? 
+        // For now, static labels are the main concern.
     }
 
     async updateStreamerMetadata(identifier) {
