@@ -52,17 +52,54 @@ apiRouter.get('/stream/:user', async (req, res) => {
     // Handle YouTube (y:VIDEO_ID)
     if (user.startsWith('y:')) {
         const videoId = user.substring(2);
+        const apiKey = process.env.YOUTUBE_API_KEY;
+
+        if (apiKey) {
+            try {
+                // Fetch video details including liveStreamingDetails
+                const ytRes = await axios.get(`https://www.googleapis.com/youtube/v3/videos`, {
+                    params: {
+                        part: 'snippet,liveStreamingDetails',
+                        id: videoId,
+                        key: apiKey
+                    }
+                });
+
+                if (ytRes.data.items && ytRes.data.items.length > 0) {
+                    const item = ytRes.data.items[0];
+                    const isLive = item.liveStreamingDetails && !item.liveStreamingDetails.actualEndTime;
+
+                    return res.json({
+                        online: isLive, // True if currently live
+                        title: item.snippet.title,
+                        game: item.snippet.channelTitle,
+                        viewers: isLive ? (item.liveStreamingDetails.concurrentViewers || 0) : 0,
+                        thumbnail: item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
+                        avatar: null,
+                        is_vod: !isLive // Helper flag
+                    });
+                }
+            } catch (error) {
+                console.error('YouTube API Error:', error.message);
+                // Fallback to oembed if API fails
+            }
+        }
+
+        // Fallback (OEmbed) - used if no API key or API fails
         try {
             const ytUrl = `https://www.youtube.com/watch?v=${videoId}`;
             const ytRes = await axios.get(`https://www.youtube.com/oembed?url=${encodeURIComponent(ytUrl)}&format=json`);
             // ytRes.data contains { title, author_name, author_url, ... }
             return res.json({
-                online: true, // Always "active" for metadata purposes
+                online: true, // Mark as "online" for visual availability (or could use false to imply VOD)
+                // Let's keep it true so it shows up active, but frontend can decide chat behavior.
+                // Actually, if we want to support "Comments default for VOD", we ideally need to know.
+                // Without API key, we assume "Online" (Live Chat default).
                 title: ytRes.data.title,
                 game: ytRes.data.author_name, // Map channel/author to game/category slot
-                viewers: 0, // YouTube doesn't give live viewers in oembed
+                viewers: 0,
                 thumbnail: ytRes.data.thumbnail_url,
-                avatar: null // No avatar in oembed
+                avatar: null
             });
         } catch (error) {
             console.error('YouTube oEmbed error:', error.message);

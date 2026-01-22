@@ -952,37 +952,92 @@ class MultiTwitchApp {
         });
     }
 
-    loadChat(identifier) {
+    async loadChat(identifier) {
+        if (this.activeChat === identifier) return;
         this.activeChat = identifier;
-        this.renderChatTabs(); // Update active state
 
-        this.chatContainer.innerHTML = ''; // Clear previous
+        // Update Tabs
+        this.renderChatTabs();
 
-        let type = 'twitch';
-        let id = identifier;
-        if (identifier.startsWith('k:')) { type = 'kick'; id = identifier.substring(2); }
-        else if (identifier.startsWith('y:')) { type = 'youtube'; id = identifier.substring(2); }
+        this.chatContainer.innerHTML = '';
 
-        if (type === 'twitch') {
+        if (identifier.startsWith('k:')) {
+            const kickUser = identifier.substring(2);
             const iframe = document.createElement('iframe');
-            const parentParams = CONFIG.getParent().map(p => `parent=${p}`).join('&');
-            iframe.src = `https://www.twitch.tv/embed/${id}/chat?${parentParams}&darkpopout`;
+            iframe.src = `https://kick.com/kick-token/chatroom/${kickUser}`;
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.border = 'none';
             this.chatContainer.appendChild(iframe);
-        } else if (type === 'kick') {
-            // Kick chat seems embeddable via iframe directly?
-            const div = document.createElement('div');
-            div.style.padding = '20px';
-            div.style.color = '#ccc';
-            div.style.textAlign = 'center';
-            div.innerHTML = "<p>Kick Chat might not embed on localhost due to CSP.</p><p><a href='https://kick.com/" + id + "' target='_blank' style='color:#53fc18'>Open Kick Chat Info</a></p>";
-            this.chatContainer.appendChild(div);
+        } else if (identifier.startsWith('y:')) {
+            const videoId = identifier.substring(2);
+
+            // Check metadata for live status if available
+            const container = document.createElement('div');
+            container.style.width = '100%';
+            container.style.height = '100%';
+            container.style.display = 'flex';
+            container.style.flexDirection = 'column';
+            container.style.alignItems = 'center';
+            container.style.justifyContent = 'center';
+            container.style.background = '#18181b';
+            container.style.color = '#efeff1';
+
+            let isLive = true;
+
+            try {
+                // Determine status from sidebar item or fetch
+                const item = document.querySelector(`.stream-item[data-name="${identifier}"]`);
+                if (item) {
+                    const res = await fetch(`/api/stream/${identifier}`);
+                    const data = await res.json();
+
+                    if (data.is_vod === true) isLive = false;
+                    else if (data.online === false && data.title !== 'No Data') isLive = false;
+                }
+            } catch (e) { console.log('Chat status check failed', e); }
+
+            if (isLive) {
+                const domain = window.location.hostname;
+                const iframe = document.createElement('iframe');
+                iframe.src = `https://www.youtube.com/live_chat?v=${videoId}&embed_domain=${domain}`;
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.border = 'none';
+                this.chatContainer.appendChild(iframe);
+            } else {
+                container.innerHTML = `
+                    <div style="text-align:center; padding: 20px;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:10px; color:#adadb8;">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        <h3 style="margin-bottom:10px;">Kommentek</h3>
+                        <p style="color:#adadb8; font-size:0.9rem; margin-bottom:20px;">Ez nem élő videó. A chat itt nem érhető el.</p>
+                        <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" 
+                           style="background: #ff0000; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; font-weight: 600;">
+                           Kommentek Megnyitása
+                        </a>
+                    </div>
+                 `;
+                this.chatContainer.appendChild(container);
+            }
+
         } else {
-            const div = document.createElement('div');
-            div.style.padding = '20px';
-            div.style.color = '#ccc';
-            div.style.textAlign = 'center';
-            div.innerText = "Chat not supported for this platform yet.";
-            this.chatContainer.appendChild(div);
+            // Twitch
+            const iframe = document.createElement('iframe');
+            const parents = CONFIG.getParent();
+            const parentParams = parents.map(p => `parent=${p}`).join('&');
+            iframe.src = `https://www.twitch.tv/embed/${identifier}/chat?${parentParams}&darkpopout=true`;
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.border = 'none';
+            this.chatContainer.appendChild(iframe);
+        }
+
+        if (window.innerWidth > 768) {
+            if (this.chatSidebar.classList.contains('hidden')) {
+                this.toggleChat();
+            }
         }
     }
 
