@@ -321,7 +321,7 @@ class MultiTwitchApp {
         });
     }
 
-    loadSavedGroups() {
+    async loadSavedGroups() {
         const groups = JSON.parse(localStorage.getItem('twitchGroups') || '[]');
         this.savedGroupsList.innerHTML = '';
 
@@ -330,11 +330,28 @@ class MultiTwitchApp {
             return;
         }
 
+        // 1. Collect all unique streamers
+        const allStreamers = new Set();
+        groups.forEach(g => {
+            g.streamers.forEach(s => allStreamers.add(s));
+        });
+
+        // 2. Render Groups Initial State
+        const groupElements = [];
         groups.forEach((g, index) => {
             const div = document.createElement('div');
             div.className = 'saved-group-item';
+            div.dataset.index = index; // Store index for updates
+
+            // Create a span for the status info
+            const statusHtml = `<span class="group-status-info" style="font-size:0.8em; margin-left:5px; color:#666;">...</span>`;
+
             div.innerHTML = `
-                <span class="saved-group-name">${g.name} <span style="color:#666">(${g.streamers.length})</span></span>
+                <span class="saved-group-name">
+                    ${g.name} 
+                    <span style="color:#666">(${g.streamers.length})</span>
+                    ${statusHtml}
+                </span>
                 <div style="display:flex; gap:5px;">
                     <button class="remove-btn" style="font-size:1.1em" title="Edit group">✎</button>
                     <button class="remove-btn" style="color:var(--text-secondary)" title="Delete group">×</button>
@@ -363,7 +380,33 @@ class MultiTwitchApp {
             };
 
             this.savedGroupsList.appendChild(div);
+            groupElements.push({ div, group: g });
         });
+
+        // 3. Fetch Status in Background
+        if (allStreamers.size > 0) {
+            try {
+                const uniqueList = Array.from(allStreamers).join(',');
+                const res = await fetch(`/api/streams?users=${encodeURIComponent(uniqueList)}`);
+                const statusMap = await res.json();
+
+                // 4. Update UI
+                groupElements.forEach(item => {
+                    const onlineCount = item.group.streamers.filter(s => statusMap[s] && statusMap[s].online).length;
+                    const statusSpan = item.div.querySelector('.group-status-info');
+                    if (statusSpan) {
+                        if (onlineCount > 0) {
+                            statusSpan.innerHTML = `<span style="color:#10b981; font-weight:bold;">● ${onlineCount} online</span>`;
+                        } else {
+                            statusSpan.textContent = ''; // Hide if none online
+                        }
+                    }
+                });
+
+            } catch (e) {
+                console.error('Error fetching group status:', e);
+            }
+        }
     }
 
     openGroupEditor(index) {

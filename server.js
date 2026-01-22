@@ -236,6 +236,70 @@ apiRouter.get('/search', async (req, res) => {
     }
 });
 
+// API Endpoint to get batch stream info
+apiRouter.get('/streams', async (req, res) => {
+    const usersParam = req.query.users;
+    if (!usersParam) return res.json({});
+
+    const users = usersParam.split(',');
+    const results = {};
+    const twitchUsers = [];
+
+    // 1. Separate by platform
+    for (const user of users) {
+        if (user.startsWith('y:')) {
+            // YouTube: Assume online (video available) or fetch meta if needed. 
+            // For batch/saved groups, just showing as "Online" (available) is fine for now.
+            results[user] = { online: true, type: 'youtube' };
+        } else if (user.startsWith('k:')) {
+            // Kick: Mock online
+            results[user] = { online: true, type: 'kick' };
+        } else {
+            twitchUsers.push(user);
+            results[user] = { online: false, type: 'twitch' }; // Default offline
+        }
+    }
+
+    // 2. Fetch Twitch Data in Batch
+    if (twitchUsers.length > 0 && TWITCH_CLIENT_ID && TWITCH_CLIENT_SECRET) {
+        try {
+            if (!twitchAccessToken) {
+                twitchAccessToken = await getTwitchAccessToken();
+            }
+
+            // Helix allows multiple user_login params (up to 100)
+            // user_login=user1&user_login=user2...
+            const queryString = twitchUsers.map(u => `user_login=${encodeURIComponent(u)}`).join('&');
+
+            const streamResponse = await axios.get(`https://api.twitch.tv/helix/streams?${queryString}`, {
+                headers: {
+                    'Client-ID': TWITCH_CLIENT_ID,
+                    'Authorization': `Bearer ${twitchAccessToken}`
+                }
+            });
+
+            const liveStreams = streamResponse.data.data;
+
+            // Map live streams to results
+            liveStreams.forEach(stream => {
+                const login = stream.user_login.toLowerCase();
+                if (results[login]) {
+                    results[login].online = true;
+                    // We could add more data here if the frontend needs it (viewers, game)
+                    results[login].viewers = stream.viewer_count;
+                    results[login].game = stream.game_name;
+                }
+            });
+
+        } catch (error) {
+            console.error('Batch Twitch Error:', error.message);
+            if (error.response?.status === 401) twitchAccessToken = null;
+        }
+    }
+
+    res.json(results);
+});
+
 // Configure Routes
 // Local
 app.use('/api', apiRouter);
