@@ -573,84 +573,147 @@ body {
 /* ... existing styles ... */
 
 /* RESPONSIVE DESIGN */
+/* RESPONSIVE DESIGN */
 @media (max-width: 768px) {
+
+    /* Use dynamic viewport height for mobile browsers */
+    body,
+    .app-container {
+        height: 100dvh;
+    }
+
     .mobile-menu-btn {
         display: block;
+        /* Ensure it's clickable */
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .top-bar {
+        padding-left: 60px;
+        /* Space for menu button */
     }
 
     .sidebar {
-        position: absolute;
-        height: 100%;
+        position: fixed;
+        /* Fixed to viewport */
+        height: 100dvh;
         width: 80%;
-        /* Relative width */
         max-width: 300px;
-        /* Cap it */
         transform: translateX(-100%);
         box-shadow: 5px 0 15px rgba(0, 0, 0, 0.5);
         backdrop-filter: blur(10px);
-        /* Modern feel */
         border-right: 1px solid rgba(255, 255, 255, 0.1);
+        z-index: 200;
+        /* High z-index */
     }
 
     .sidebar.mobile-open {
         transform: translateX(0);
     }
 
+    /* Transform Chat Sidebar into a Bottom Sheet for Mobile */
     .chat-sidebar {
-        position: absolute;
+        position: fixed;
+        left: 0;
         right: 0;
-        top: 0;
-        height: 100%;
-        width: 85%;
-        max-width: 320px;
-        transform: translateX(100%);
-        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
-        margin-right: 0;
-        display: flex !important;
-        z-index: 60;
-        /* Higher than sidebar potentially if overlapped */
-        background: rgba(24, 24, 27, 0.95);
-        /* Slight transparency */
+        bottom: 0;
+        top: auto;
+        /* Reset top */
+        width: 100%;
+        height: 50dvh;
+        /* Half screen height */
+        border-left: none;
+        border-top: 1px solid var(--border);
+        box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.5);
+
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        z-index: 150;
+        /* Above content, below sidebar/modals */
+        transform: translateY(0);
+        /* Default visible position logic handled below */
+
         backdrop-filter: blur(10px);
+        background: rgba(24, 24, 27, 0.98);
     }
 
-    /* When not hidden (active) on mobile */
-    .chat-sidebar:not(.hidden) {
-        transform: translateX(0);
-        margin-right: 0;
-    }
-
-    /* When hidden on mobile */
+    /* Adjust logic for hidden state on mobile vertical axis */
     .chat-sidebar.hidden {
-        transform: translateX(100%);
+        transform: translateY(100%);
+        margin-right: 0 !important;
+        /* Override desktop margin logic */
         display: flex !important;
-        width: 85%;
-        /* Maintain width to animate correctly */
+        /* Keep display flex for animation */
+    }
+
+    /* When active (not hidden), ensure it's up */
+    .chat-sidebar:not(.hidden) {
+        transform: translateY(0);
+        margin-right: 0 !important;
     }
 
     .main-content {
+        height: 100dvh;
         overflow-y: auto;
+        /* padding-bottom: 50dvh; */
+        /* Option: Add padding if chat overlays content statically? */
+        /* Better: Let chat overlay. User can toggle it. */
     }
 
     .stream-grid {
         display: flex;
         flex-direction: column;
         height: auto;
-        min-height: 100%;
+        min-height: auto;
+        padding-bottom: 80px;
+        /* Space for bottom content if needed */
     }
 
     /* Force full width and aspect ratio for streams on mobile */
+    /* Force full width and aspect ratio for streams on mobile using padding hack */
     .stream-container {
         width: 100% !important;
-        height: auto !important;
-        aspect-ratio: 16/9;
-        /* Remove fixed min-height to allow natural aspect scaling, 
-           but keep enough to be usable if ratio fails */
-        min-height: 200px;
+        height: 0 !important;
+        /* Collapsed height */
+        padding-bottom: 56.25% !important;
+        /* 16:9 Aspect Ratio */
         flex-grow: 0;
         background: #000;
-        margin-bottom: 2px;
-        /* Slight separation */
+        margin-bottom: 4px;
+        border-bottom: 1px solid #222;
+        position: relative;
+        overflow: hidden;
+        /* Ensure content stays inside */
+    }
+
+    /* Absolute position the content to fill the padded box */
+    .stream-container>iframe,
+    .stream-container>div:not(.stream-overlay) {
+        position: absolute !important;
+        top: 0;
+        left: 0;
+        width: 100% !important;
+        height: 100% !important;
+        border: none;
+    }
+
+    /* Improve Search/Input experience */
+    #streamInput {
+        font-size: 16px;
+        /* Prevent zoom on iOS */
+    }
+
+    .chat-header {
+        min-height: 44px;
+        /* Touch target */
+    }
+
+    .chat-tab {
+        padding: 8px 12px;
+        /* Larger targets */
     }
 }
 
