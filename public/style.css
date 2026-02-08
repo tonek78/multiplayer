@@ -18,6 +18,10 @@
     box-sizing: border-box;
 }
 
+.hidden {
+    display: none !important;
+}
+
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--bg-dark);
@@ -299,9 +303,11 @@ body {
 
 .sidebar-footer {
     display: flex;
-    gap: 1rem;
+    gap: 0.5rem;
     padding-top: 1rem;
     border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .icon-btn {
@@ -309,7 +315,7 @@ body {
     border: none;
     color: var(--text-secondary);
     cursor: pointer;
-    padding: 0.5rem;
+    padding: 0.4rem;
     border-radius: 6px;
     transition: all 0.2s;
 }
@@ -673,23 +679,25 @@ body {
     }
 
     /* Force full width and aspect ratio for streams on mobile */
-    /* Force full width and aspect ratio for streams on mobile using padding hack */
+    /* Force full width and aspect ratio for streams on mobile using modern aspect-ratio */
+    /* Force full width and aspect ratio for streams on mobile using padding hack (Robust) */
     .stream-container {
+        display: block;
         width: 100% !important;
         height: 0 !important;
-        /* Collapsed height */
+        /* Force collapse height to use padding */
         padding-bottom: 56.25% !important;
         /* 16:9 Aspect Ratio */
+
         flex-grow: 0;
         background: #000;
         margin-bottom: 4px;
         border-bottom: 1px solid #222;
         position: relative;
         overflow: hidden;
-        /* Ensure content stays inside */
     }
 
-    /* Absolute position the content to fill the padded box */
+    /* Standard absolute positioning within the relative container */
     .stream-container>iframe,
     .stream-container>div:not(.stream-overlay) {
         position: absolute !important;

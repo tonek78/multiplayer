@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const path = require('path');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,6 +19,8 @@ let twitchAccessToken = null;
 if (require.main === module) {
     app.use(express.static(path.join(__dirname, 'public')));
 }
+
+app.use(cookieParser());
 
 // Routers
 const apiRouter = express.Router();
@@ -222,7 +225,7 @@ authRouter.get('/callback', async (req, res) => {
 
         const userAccessToken = tokenResponse.data.access_token;
 
-        // Get User ID
+        // Get User ID and Info
         const userResponse = await axios.get('https://api.twitch.tv/helix/users', {
             headers: {
                 'Client-ID': TWITCH_CLIENT_ID,
@@ -230,29 +233,84 @@ authRouter.get('/callback', async (req, res) => {
             }
         });
 
-        const userId = userResponse.data.data[0].id;
+        const userData = userResponse.data.data[0];
 
-        // Get Followed Streams (Live only)
-        // Note: 'user_id' param is the user *checking* follows (the logged in user)
-        const followsResponse = await axios.get(`https://api.twitch.tv/helix/streams/followed?user_id=${userId}`, {
-            headers: {
-                'Client-ID': TWITCH_CLIENT_ID,
-                'Authorization': `Bearer ${userAccessToken}`
-            }
-        });
+        // Set cookies
+        res.cookie('twitch_token', userAccessToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: 30 * 24 * 60 * 60 * 1000 }); // 30 days
+        res.cookie('twitch_user', JSON.stringify({
+            id: userData.id,
+            login: userData.login,
+            display_name: userData.display_name,
+            profile_image_url: userData.profile_image_url
+        }), { httpOnly: false, secure: process.env.NODE_ENV === 'production', maxAge: 30 * 24 * 60 * 60 * 1000 });
 
-        const liveStreams = followsResponse.data.data;
-
-        if (liveStreams.length === 0) {
-            return res.redirect('/');
-        }
-
-        const streamers = liveStreams.map(s => s.user_login).join('/');
-        res.redirect(`/${streamers}`);
+        res.redirect('/');
 
     } catch (error) {
         console.error('Auth Error:', error.response ? error.response.data : error.message);
         res.status(500).send('Authentication Failed');
+    }
+});
+
+authRouter.get('/logout', (req, res) => {
+    res.clearCookie('twitch_token');
+    res.clearCookie('twitch_user');
+    res.redirect('/');
+});
+
+// Get Logged In User
+apiRouter.get('/user', (req, res) => {
+    if (req.cookies.twitch_user) {
+        try {
+            const user = JSON.parse(req.cookies.twitch_user);
+            res.json(user);
+        } catch (e) {
+            res.json(null);
+        }
+    } else {
+        res.json(null);
+    }
+});
+
+// Get User's Live Followed Channels
+apiRouter.get('/live-follows', async (req, res) => {
+    const token = req.cookies.twitch_token;
+    const userCookie = req.cookies.twitch_user;
+
+    if (!token || !userCookie) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    try {
+        const user = JSON.parse(userCookie);
+        const userId = user.id;
+
+        const response = await axios.get(`https://api.twitch.tv/helix/streams/followed?user_id=${userId}`, {
+            headers: {
+                'Client-ID': TWITCH_CLIENT_ID,
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        const liveStreams = response.data.data.map(stream => ({
+            user_name: stream.user_name,
+            user_login: stream.user_login,
+            game_name: stream.game_name,
+            viewer_count: stream.viewer_count,
+            thumbnail_url: stream.thumbnail_url.replace('{width}x{height}', '320x180'),
+            started_at: stream.started_at
+        }));
+
+        res.json(liveStreams);
+
+    } catch (error) {
+        console.error('Error fetching followed streams:', error.message);
+        if (error.response?.status === 401) {
+            res.clearCookie('twitch_token');
+            res.clearCookie('twitch_user');
+            return res.status(401).json({ error: 'Token expired' });
+        }
+        res.status(500).json({ error: 'Failed to fetch follows' });
     }
 });
 

@@ -38,7 +38,10 @@ const TRANSLATIONS = {
         "toastSaved": "Group Saved!",
         "toastUpdated": "Group updated!",
         "toastSettingsSaved": "Settings saved!",
-        "language": "Language"
+        "language": "Language",
+        "myFollows": "My Follows",
+        "loginWithTwitch": "Login with Twitch",
+        "logout": "Logout"
     },
     "hu": {
         "savedGroups": "Mentett Csoportok",
@@ -66,7 +69,10 @@ const TRANSLATIONS = {
         "toastSaved": "Csoport Mentve!",
         "toastUpdated": "Csoport frissítve!",
         "toastSettingsSaved": "Beállítások mentve!",
-        "language": "Nyelv"
+        "language": "Nyelv",
+        "myFollows": "Követéseim",
+        "loginWithTwitch": "Bejelentkezés Twitch-el",
+        "logout": "Kijelentkezés"
     }
 };
 
@@ -97,6 +103,11 @@ class MultiTwitchApp {
 
         // Modal Elements
         this.modal = document.getElementById('confirmModal');
+        this.myFollowsSection = document.getElementById('myFollowsSection');
+        this.myFollowsList = document.getElementById('myFollowsList');
+        this.myFollowsCount = document.getElementById('myFollowsCount');
+        this.loginBtn = document.getElementById('loginBtn');
+        this.logoutBtn = document.getElementById('logoutBtn');
         this.modalMessage = document.getElementById('confirmMessage');
         this.confirmBtn = document.getElementById('confirmOk');
         this.cancelBtn = document.getElementById('confirmCancel');
@@ -162,6 +173,86 @@ class MultiTwitchApp {
         this.loadFromURL();
         this.loadSavedGroups();
         this.startAutoRefresh();
+        this.loadSavedGroups();
+        this.checkLoginStatus();
+        this.startAutoRefresh();
+    }
+
+    async checkLoginStatus() {
+        try {
+            const res = await fetch('/api/user');
+            const user = await res.json();
+            if (user) {
+                // Logged in
+                this.loginBtn.classList.add('hidden');
+                this.logoutBtn.classList.remove('hidden');
+                this.logoutBtn.setAttribute('title', `Logout (${user.display_name})`);
+
+                // Show Follows Section
+                this.myFollowsSection.classList.remove('hidden');
+                this.loadLiveFollows();
+            } else {
+                // Not logged in
+                this.loginBtn.classList.remove('hidden');
+                this.logoutBtn.classList.add('hidden');
+                this.myFollowsSection.classList.add('hidden');
+            }
+        } catch (e) {
+            console.error('Login check failed:', e);
+        }
+    }
+
+    async loadLiveFollows() {
+        try {
+            const res = await fetch('/api/live-follows');
+            if (res.status === 401) {
+                // Token expired
+                this.logoutBtn.click(); // or specific handler
+                return;
+            }
+            const streams = await res.json();
+            this.renderMyFollows(streams);
+        } catch (e) {
+            console.error('Error loading follows:', e);
+        }
+    }
+
+    renderMyFollows(streams) {
+        this.myFollowsList.innerHTML = '';
+        if (streams.length > 0) {
+            this.myFollowsCount.textContent = `(${streams.length})`;
+            streams.forEach(stream => {
+                const div = document.createElement('div');
+                div.className = 'saved-group-item'; // Reuse class for styling
+                div.style.justifyContent = 'flex-start';
+                div.style.gap = '10px';
+
+                div.innerHTML = `
+                   <img src="${stream.thumbnail_url}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">
+                   <div style="display:flex; flex-direction:column; overflow:hidden;">
+                        <span style="font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${stream.user_name}</span>
+                        <span style="font-size:0.8em; color:#bbb; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${stream.game_name}</span>
+                   </div>
+                   <span style="margin-left:auto; color:#ef4444; font-size:0.8em;">● ${this.formatViewers(stream.viewer_count)}</span>
+               `;
+
+                div.onclick = () => {
+                    this.addStreamer(stream.user_login);
+                };
+
+                this.myFollowsList.appendChild(div);
+            });
+        } else {
+            this.myFollowsCount.textContent = '';
+            this.myFollowsList.innerHTML = '<div style="padding:0.5rem; font-size:0.8em; color:#666">No followed channels live.</div>';
+        }
+    }
+
+    formatViewers(count) {
+        if (count >= 1000) {
+            return (count / 1000).toFixed(1) + 'k';
+        }
+        return count;
     }
 
     showConfirm(message, action) {
@@ -927,7 +1018,7 @@ class MultiTwitchApp {
             iframe.style.width = '100%';
             iframe.style.height = '100%';
             iframe.style.border = 'none';
-            iframe.allow = "autoplay; fullscreen; picture-in-picture";
+            iframe.allow = "autoplay; fullscreen; picture-in-picture; encrypted-media; gyroscope; accelerator; clipboard-write";
             container.appendChild(iframe);
         } else if (type === 'youtube') {
             const iframe = document.createElement('iframe');
@@ -937,7 +1028,7 @@ class MultiTwitchApp {
             iframe.style.width = '100%';
             iframe.style.height = '100%';
             iframe.style.border = 'none';
-            iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+            iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen";
             iframe.allowFullscreen = true;
             container.appendChild(iframe);
         }
