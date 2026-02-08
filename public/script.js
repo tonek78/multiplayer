@@ -541,6 +541,17 @@ class MultiTwitchApp {
             this.layoutToggleBtn.addEventListener('click', () => this.toggleLayout());
         }
 
+        // Import/Export Events
+        if (this.exportBtn) {
+            this.exportBtn.addEventListener('click', () => this.exportData());
+        }
+        if (this.importBtnTrigger) {
+            this.importBtnTrigger.addEventListener('click', () => this.importFile.click());
+        }
+        if (this.importFile) {
+            this.importFile.addEventListener('change', (e) => this.importData(e));
+        }
+
         // Follows Search
         if (this.followsSearchInput) {
             this.followsSearchInput.addEventListener('input', (e) => {
@@ -911,16 +922,6 @@ class MultiTwitchApp {
         // Reload to apply deeply nested changes if needed, but for now replacement should work
         this.showNotification(this.t('toastSettingsSaved'));
         this.settingsModal.classList.remove('active');
-        // Import/Export Events
-        if (this.exportBtn) {
-            this.exportBtn.addEventListener('click', () => this.exportData());
-        }
-        if (this.importBtnTrigger) {
-            this.importBtnTrigger.addEventListener('click', () => this.importFile.click());
-        }
-        if (this.importFile) {
-            this.importFile.addEventListener('change', (e) => this.importData(e));
-        }
     }
 
     exportData() {
