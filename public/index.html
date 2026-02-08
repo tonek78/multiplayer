@@ -80,6 +80,11 @@
                         <span id="myFollowsCount" style="font-size:0.8em; color:#666;"></span>
                     </div>
                 </div>
+                <!-- Search Input for Follows -->
+                <div style="padding: 0 0.5rem 0.5rem 0.5rem;">
+                    <input type="text" id="followsSearch" placeholder="Search follows..."
+                        style="width:100%; background:rgba(255,255,255,0.05); border:1px solid #333; color:white; padding:4px 8px; border-radius:4px; font-size:0.8rem; outline:none;">
+                </div>
                 <div id="myFollowsList" class="saved-groups-list">
                     <!-- Live Follows here -->
                 </div>
@@ -272,6 +277,22 @@
                     <span class="checkmark"></span>
                     <span data-i18n="startMuted">Start streams muted</span>
                 </label>
+                <label class="checkbox-container" style="margin-top:10px;">
+                    <input type="checkbox" id="settingNotifications">
+                    <span class="checkmark"></span>
+                    <span>Enable Live Notifications</span>
+                </label>
+            </div>
+
+            <div style="margin-bottom: 1.5rem; border-top: 1px solid #333; padding-top: 1rem;">
+                <label style="display:block; margin-bottom:0.5rem; color:var(--text-secondary);">Data Management</label>
+                <div style="display:flex; gap:10px;">
+                    <button id="exportBtn" class="modal-btn" style="background:#444; color:white; flex:1;">Export
+                        Data</button>
+                    <button id="importBtnTrigger" class="modal-btn" style="background:#444; color:white; flex:1;">Import
+                        Data</button>
+                    <input type="file" id="importFile" accept=".json" style="display:none;">
+                </div>
             </div>
 
             <div class="modal-actions">

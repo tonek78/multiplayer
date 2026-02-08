@@ -544,9 +544,97 @@ body {
 }
 
 .overlay-btn:hover {
-    background: var(--accent);
     border-color: var(--accent);
 }
+
+/* Cinema Mode */
+.stream-grid.mode-cinema {
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    grid-template-rows: 100%;
+    /* overflow-y: hidden; */
+    /* Let grid handle it */
+}
+
+.stream-grid.mode-cinema .stream-container {
+    width: 100% !important;
+    height: 100% !important;
+    border: 1px solid #111;
+}
+
+/* First stream is main */
+.stream-grid.mode-cinema .stream-container:nth-child(1) {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+/* Others sidebar list */
+.stream-grid.mode-cinema .stream-container:not(:nth-child(1)) {
+    grid-column: 2;
+    /* We need to stack them or make column 2 a flow container. 
+       CSS Grid "auto-flow" might put them in rows in col 2?
+       Actually, if we defined grid rows as 100%, subsequent items might push height.
+       Let's redefine for column 2 to be flex column.
+    */
+    display: none;
+    /* Temp hide if not handling complex grid placement */
+}
+
+/* Better approach for Cinema Mode: Flex logic */
+.stream-grid.mode-cinema {
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+.stream-grid.mode-cinema .stream-container:nth-child(1) {
+    flex: 3;
+    height: 100%;
+}
+
+/* Wrap others in a virtual container? No, they are direct children. */
+/* We need to target 2+ to wrap into a side column. detailed flex is hard without wrapper. */
+/* CSS Grid Area approach */
+.stream-grid.mode-cinema {
+    display: grid;
+    grid-template-columns: 75% 25%;
+    grid-template-rows: 100%;
+    /* Main height */
+    grid-template-areas: "main side";
+    padding: 0;
+}
+
+.stream-grid.mode-cinema .stream-container:nth-child(1) {
+    grid-area: main;
+    width: 100%;
+    height: 100%;
+}
+
+/* All other children need to go into 'side'. But Grid doesn't auto-flow multiple items into one area bucket as a list. */
+/* We can't easily do this without changing DOM structure or using a very specific grid-template-rows logic. */
+
+/* Alternative: Main is absolute? */
+/* Let's stick to Grid with implicit rows for side */
+.stream-grid.mode-cinema {
+    display: grid;
+    grid-template-columns: 75% 25%;
+    grid-auto-rows: 33.33%;
+    /* 3 items on side fit 100% height? */
+    /* If we have many items, side scrolls? */
+    overflow-y: hidden;
+}
+
+.stream-grid.mode-cinema .stream-container:nth-child(1) {
+    grid-column: 1;
+    grid-row: 1 / span 100;
+    /* Spans all rows */
+    height: 100%;
+}
+
+.stream-grid.mode-cinema .stream-container:not(:nth-child(1)) {
+    grid-column: 2;
+    /* Automatic row placement */
+}
+
 
 .empty-state {
     position: absolute;

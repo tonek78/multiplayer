@@ -112,6 +112,7 @@ class MultiTwitchApp {
         // Sidebar Toggle Elements
         this.collapseSidebarBtn = document.getElementById('collapseSidebarBtn');
         this.expandSidebarBtn = document.getElementById('expandSidebarBtn');
+        this.followsSearchInput = document.getElementById('followsSearch');
 
         // Modal Elements (re-ordered to match the snippet's structure for consistency, though `this.modal` was already defined)
         this.modalMessage = document.getElementById('confirmMessage');
@@ -135,7 +136,10 @@ class MultiTwitchApp {
         this.promptInput = document.getElementById('promptInput');
         this.promptTitle = document.getElementById('promptTitle');
         this.promptOkBtn = document.getElementById('promptOk');
+        this.promptOkBtn = document.getElementById('promptOk');
         this.promptCancelBtn = document.getElementById('promptCancel');
+
+        this.layoutToggleBtn = document.getElementById('layoutToggle');
 
         this.toast = document.getElementById('toast');
 
@@ -152,8 +156,11 @@ class MultiTwitchApp {
         this.settings = {
             theme: '#9146FF',
             muted: false,
+            notifications: false, // New
             language: 'hu' // Default language
         };
+
+        this.lastLiveFollows = new Set(); // Track confirmed live streams
         this.settingsBtn = document.getElementById('settingsBtn');
         this.settingsModal = document.getElementById('settingsModal');
         this.settingsSave = document.getElementById('settingsSave');
@@ -162,6 +169,11 @@ class MultiTwitchApp {
         this.settingsCancel = document.getElementById('settingsCancel');
         this.settingMuted = document.getElementById('settingMuted');
         this.settingLanguage = document.getElementById('settingLanguage');
+
+        // Import/Export Elements
+        this.exportBtn = document.getElementById('exportBtn');
+        this.importBtnTrigger = document.getElementById('importBtnTrigger');
+        this.importFile = document.getElementById('importFile');
 
         // Help Modal
         this.helpBtn = document.getElementById('helpBtn');
@@ -228,11 +240,36 @@ class MultiTwitchApp {
     restoreSidebarState() {
         const collapsed = localStorage.getItem('sidebarCollapsed') === 'true';
         if (collapsed) {
-            this.sidebar.classList.add('collapsed');
             this.expandSidebarBtn.classList.remove('hidden');
         } else {
             this.sidebar.classList.remove('collapsed');
             this.expandSidebarBtn.classList.add('hidden');
+        }
+    }
+
+    toggleLayout() {
+        this.gridContainer.classList.toggle('mode-cinema');
+        // Optional: Change icon?
+        const isCinema = this.gridContainer.classList.contains('mode-cinema');
+        if (isCinema) {
+            this.layoutToggleBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                    <line x1="9" y1="21" x2="9" y2="9"></line>
+                </svg>
+             `;
+            this.layoutToggleBtn.title = "Switch to Grid View";
+        } else {
+            this.layoutToggleBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+             `;
+            this.layoutToggleBtn.title = "Switch to Cinema Mode";
         }
     }
 
@@ -277,9 +314,25 @@ class MultiTwitchApp {
 
     renderMyFollows(streams) {
         this.myFollowsList.innerHTML = '';
+        const currentLive = new Set();
+
         if (streams.length > 0) {
             this.myFollowsCount.textContent = `(${streams.length})`;
             streams.forEach(stream => {
+                currentLive.add(stream.user_login);
+
+                // Notification Logic
+                if (this.settings.notifications &&
+                    !this.lastLiveFollows.has(stream.user_login) &&
+                    this.lastLiveFollows.size > 0 && // Don't notify on initial load
+                    Notification.permission === "granted") {
+
+                    new Notification(`${stream.user_name} is Live!`, {
+                        body: stream.title || `Playing ${stream.game_name}`,
+                        icon: stream.thumbnail_url || '/favicon.ico'
+                    });
+                }
+
                 const div = document.createElement('div');
                 div.className = 'saved-group-item'; // Reuse class for styling
                 div.style.justifyContent = 'flex-start';
@@ -304,6 +357,8 @@ class MultiTwitchApp {
             this.myFollowsCount.textContent = '';
             this.myFollowsList.innerHTML = '<div style="padding:0.5rem; font-size:0.8em; color:#666">No followed channels live.</div>';
         }
+
+        this.lastLiveFollows = currentLive;
     }
 
     formatViewers(count) {
@@ -352,6 +407,9 @@ class MultiTwitchApp {
             this.streamers.forEach(name => {
                 this.updateStreamerMetadata(name);
             });
+            // Check for new live followed channels
+            if (!this.loginBtn.classList.contains('hidden')) return; // Not logged in
+            this.loadLiveFollows();
         }, 60000);
     }
 
@@ -478,6 +536,26 @@ class MultiTwitchApp {
         // Sidebar Toggle Events
         this.collapseSidebarBtn.addEventListener('click', () => this.toggleSidebar());
         this.expandSidebarBtn.addEventListener('click', () => this.toggleSidebar());
+
+        if (this.layoutToggleBtn) {
+            this.layoutToggleBtn.addEventListener('click', () => this.toggleLayout());
+        }
+
+        // Follows Search
+        if (this.followsSearchInput) {
+            this.followsSearchInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const items = this.myFollowsList.querySelectorAll('.saved-group-item');
+                items.forEach(item => {
+                    const name = item.innerText.toLowerCase();
+                    if (name.includes(term)) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
     }
 
     async performSearch(query) {
@@ -805,6 +883,7 @@ class MultiTwitchApp {
     openSettings() {
         // Set UI to current state
         this.settingMuted.checked = this.settings.muted;
+        if (this.settingNotifications) this.settingNotifications.checked = this.settings.notifications;
         this.settingLanguage.value = this.settings.language;
         this.colorSwatches.forEach(btn => {
             btn.classList.toggle('active', btn.dataset.color === this.settings.theme);
@@ -814,6 +893,12 @@ class MultiTwitchApp {
 
     saveSettings() {
         this.settings.muted = this.settingMuted.checked;
+        if (this.settingNotifications) {
+            this.settings.notifications = this.settingNotifications.checked;
+            if (this.settings.notifications && Notification.permission !== "granted") {
+                Notification.requestPermission();
+            }
+        }
         this.settings.language = this.settingLanguage.value;
         const activeSwatch = document.querySelector('.color-swatch.active');
         if (activeSwatch) {
@@ -826,6 +911,68 @@ class MultiTwitchApp {
         // Reload to apply deeply nested changes if needed, but for now replacement should work
         this.showNotification(this.t('toastSettingsSaved'));
         this.settingsModal.classList.remove('active');
+        // Import/Export Events
+        if (this.exportBtn) {
+            this.exportBtn.addEventListener('click', () => this.exportData());
+        }
+        if (this.importBtnTrigger) {
+            this.importBtnTrigger.addEventListener('click', () => this.importFile.click());
+        }
+        if (this.importFile) {
+            this.importFile.addEventListener('change', (e) => this.importData(e));
+        }
+    }
+
+    exportData() {
+        const data = {
+            twitchGroups: JSON.parse(localStorage.getItem('twitchGroups') || '[]'),
+            twitchSettings: JSON.parse(localStorage.getItem('twitchSettings') || '{}'),
+            collapsedSections: JSON.parse(localStorage.getItem('collapsedSections') || '{}'),
+            sidebarCollapsed: localStorage.getItem('sidebarCollapsed')
+        };
+
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `multitwitch_backup_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+
+                // Validate basic structure
+                if (!data.twitchGroups && !data.twitchSettings) {
+                    throw new Error("Invalid backup file");
+                }
+
+                if (confirm("This will overwrite your current settings and groups. Continue?")) {
+                    if (data.twitchGroups) localStorage.setItem('twitchGroups', JSON.stringify(data.twitchGroups));
+                    if (data.twitchSettings) localStorage.setItem('twitchSettings', JSON.stringify(data.twitchSettings));
+                    if (data.collapsedSections) localStorage.setItem('collapsedSections', JSON.stringify(data.collapsedSections));
+                    if (data.sidebarCollapsed !== undefined) localStorage.setItem('sidebarCollapsed', data.sidebarCollapsed);
+
+                    alert("Import successful! Reloading page...");
+                    window.location.reload();
+                }
+            } catch (err) {
+                alert("Error importing file: " + err.message);
+                console.error(err);
+            }
+        };
+        reader.readAsText(file);
+        // Reset input
+        event.target.value = '';
     }
 
     t(key) {
@@ -1047,6 +1194,7 @@ class MultiTwitchApp {
         overlay.className = 'stream-overlay';
         overlay.innerHTML = `
             <button class="overlay-btn" onclick="app.toggleFocus('${identifier}')">Focus</button>
+            <button class="overlay-btn" onclick="app.refreshStream('${identifier}')" title="Reload Stream">↻</button>
             <button class="overlay-btn" onclick="app.confirmRemoveStreamer('${identifier}')">Close</button>
         `;
         container.appendChild(overlay);
@@ -1116,6 +1264,44 @@ class MultiTwitchApp {
             // Update button text
             const btn = container.querySelector('.overlay-btn');
             if (btn) btn.textContent = 'Unfocus';
+        }
+    }
+
+    refreshStream(identifier) {
+        const container = document.getElementById(`embed-${identifier}`);
+        if (!container) return;
+
+        const iframe = container.querySelector('iframe');
+        if (iframe) {
+            // Force reload by resetting src
+            // eslint-disable-next-line
+            iframe.src = iframe.src;
+        } else {
+            // Handle Twitch Embed (Wait, Player doesn't have reload?)
+            // We can just re-create it or use setChannel if it's the same.
+            // But usually this wrapper div contains the iframe from Twitch lib.
+            // The Twitch player object doesn't expose a simple reload. 
+            // We can destroy and recreate, or try to find the internal iframe.
+
+            // Re-render might be best for stability.
+            // this.players[identifier] -> no reload method.
+
+            // Simple hack: Re-run renderStreamEmbed logic? No, that duplicates container.
+            // Let's just empty the container (except overlay) and re-init.
+
+            // Actually, for consistency let's rebuild the specific embed part.
+            // Removing the container and re-adding at same index is tricky without full re-render.
+
+            // Optimistic approach for Twitch JS Embed:
+            // It creates an iframe inside #twitch-embed-ID.
+            const twitchContainer = container.querySelector(`[id^="twitch-embed-"]`);
+            if (twitchContainer) {
+                const twitchIframe = twitchContainer.querySelector('iframe');
+                if (twitchIframe) {
+                    twitchIframe.src = twitchIframe.src;
+                    return;
+                }
+            }
         }
     }
 
