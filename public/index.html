@@ -23,6 +23,12 @@
         </svg>
     </button>
 
+    <button class="sidebar-expand-btn hidden" id="expandSidebarBtn" title="Expand Sidebar">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+    </button>
+
     <div class="app-container">
         <!-- Sidebar / Control Panel -->
         <nav class="sidebar" id="sidebar">
@@ -41,16 +47,24 @@
                         stroke-linejoin="round" />
                 </svg>
                 <a href="/" class="brand-name"><span>MultiTwitch</span> </a>
-
+                <button id="collapseSidebarBtn" class="icon-btn-small" title="Collapse Sidebar"
+                    style="margin-left:auto;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
             </div>
 
 
 
-            <div class="saved-groups-section">
-                <div class="section-header">
-                    <span data-i18n="savedGroups">Saved Groups</span>
+            <div class="saved-groups-section" id="savedGroupsSection">
+                <div class="section-header" onclick="app.toggleSection('savedGroupsList', this)">
+                    <div style="display:flex; align-items:center; gap:5px;">
+                        <span class="toggle-icon">▼</span>
+                        <span data-i18n="savedGroups">Saved Groups</span>
+                    </div>
                     <button id="saveGroupBtn" class="icon-btn-small" data-i18n-title="saveGroupBtn"
-                        title="Save current group">+</button>
+                        title="Save current group" onclick="event.stopPropagation()">+</button>
                 </div>
                 <div id="savedGroupsList" class="saved-groups-list">
                     <!-- Groups here -->
@@ -59,17 +73,29 @@
 
             <!-- New My Follows Section -->
             <div id="myFollowsSection" class="saved-groups-section hidden">
-                <div class="section-header">
-                    <span data-i18n="myFollows">My Follows</span>
-                    <span id="myFollowsCount" style="font-size:0.8em; color:#666;"></span>
+                <div class="section-header" onclick="app.toggleSection('myFollowsList', this)">
+                    <div style="display:flex; align-items:center; gap:5px;">
+                        <span class="toggle-icon">▼</span>
+                        <span data-i18n="myFollows">My Follows</span>
+                        <span id="myFollowsCount" style="font-size:0.8em; color:#666;"></span>
+                    </div>
                 </div>
                 <div id="myFollowsList" class="saved-groups-list">
                     <!-- Live Follows here -->
                 </div>
             </div>
 
-            <div class="active-streams-list" id="activeStreamsList">
-                <!-- Streamers will be listed here -->
+            <div class="saved-groups-section"
+                style="border-bottom:none; flex:1; display:flex; flex-direction:column; overflow:hidden;">
+                <div class="section-header" onclick="app.toggleSection('activeStreamsList', this)">
+                    <div style="display:flex; align-items:center; gap:5px;">
+                        <span class="toggle-icon">▼</span>
+                        <span>Active</span>
+                    </div>
+                </div>
+                <div class="active-streams-list" id="activeStreamsList">
+                    <!-- Streamers will be listed here -->
+                </div>
             </div>
 
             <div class="sidebar-footer">

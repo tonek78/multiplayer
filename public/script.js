@@ -108,6 +108,12 @@ class MultiTwitchApp {
         this.myFollowsCount = document.getElementById('myFollowsCount');
         this.loginBtn = document.getElementById('loginBtn');
         this.logoutBtn = document.getElementById('logoutBtn');
+
+        // Sidebar Toggle Elements
+        this.collapseSidebarBtn = document.getElementById('collapseSidebarBtn');
+        this.expandSidebarBtn = document.getElementById('expandSidebarBtn');
+
+        // Modal Elements (re-ordered to match the snippet's structure for consistency, though `this.modal` was already defined)
         this.modalMessage = document.getElementById('confirmMessage');
         this.confirmBtn = document.getElementById('confirmOk');
         this.cancelBtn = document.getElementById('confirmCancel');
@@ -172,10 +178,62 @@ class MultiTwitchApp {
         this.bindEvents();
         this.loadFromURL();
         this.loadSavedGroups();
-        this.startAutoRefresh();
-        this.loadSavedGroups();
         this.checkLoginStatus();
+        this.restoreSectionStates();
+        this.restoreSidebarState();
         this.startAutoRefresh();
+    }
+
+    toggleSection(listId, header) {
+        const list = document.getElementById(listId);
+        if (!list) return;
+
+        list.classList.toggle('collapsed');
+        header.classList.toggle('collapsed');
+
+        // Save state
+        const collapsed = list.classList.contains('collapsed');
+        const savedStates = JSON.parse(localStorage.getItem('collapsedSections') || '{}');
+        savedStates[listId] = collapsed;
+        localStorage.setItem('collapsedSections', JSON.stringify(savedStates));
+    }
+
+    restoreSectionStates() {
+        const savedStates = JSON.parse(localStorage.getItem('collapsedSections') || '{}');
+        for (const [listId, collapsed] of Object.entries(savedStates)) {
+            if (collapsed) {
+                const list = document.getElementById(listId);
+                const header = list?.previousElementSibling; // Assumption: Header is immediately before
+                if (list && header) {
+                    list.classList.add('collapsed');
+                    header.classList.add('collapsed');
+                }
+            }
+        }
+    }
+
+    toggleSidebar() {
+        const collapsed = this.sidebar.classList.toggle('collapsed');
+
+        if (collapsed) {
+            this.expandSidebarBtn.classList.remove('hidden');
+        } else {
+            this.expandSidebarBtn.classList.add('hidden');
+        }
+
+        // Save state
+        localStorage.setItem('sidebarCollapsed', collapsed);
+    }
+
+    restoreSidebarState() {
+        const collapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        if (collapsed) {
+            this.sidebar.classList.add('collapsed');
+            this.expandSidebarBtn.classList.remove('hidden');
+        } else {
+            this.sidebar.classList.remove('collapsed');
+            this.expandSidebarBtn.classList.add('hidden');
+        }
     }
 
     async checkLoginStatus() {
@@ -416,6 +474,10 @@ class MultiTwitchApp {
 
         // Saved Groups
         this.saveGroupBtn.addEventListener('click', () => this.saveCurrentGroup());
+
+        // Sidebar Toggle Events
+        this.collapseSidebarBtn.addEventListener('click', () => this.toggleSidebar());
+        this.expandSidebarBtn.addEventListener('click', () => this.toggleSidebar());
     }
 
     async performSearch(query) {

@@ -78,6 +78,39 @@ body {
     color: var(--text-primary);
 }
 
+.sidebar.collapsed {
+    width: 0;
+    padding: 0;
+    overflow: hidden;
+    border-right: none;
+}
+
+.sidebar-expand-btn {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 50;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid var(--border);
+    color: white;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.sidebar-expand-btn.hidden {
+    opacity: 0;
+    pointer-events: none;
+    display: block !important;
+    /* Override global hidden for transition if needed, actually global hidden uses display:none */
+}
+
+/* Ensure global hidden actually hides it */
+.hidden {
+    display: none !important;
+}
+
 .brand-name {
     text-decoration: none;
     color: var(--text-primary);
@@ -163,7 +196,41 @@ body {
     letter-spacing: 1px;
     color: var(--text-secondary);
     margin-bottom: 0.5rem;
-    padding: 0 0.25rem;
+    padding: 0.25rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.section-header:hover {
+    color: white;
+}
+
+.toggle-icon {
+    display: inline-block;
+    transition: transform 0.2s;
+    font-size: 0.8em;
+}
+
+.section-header.collapsed .toggle-icon {
+    transform: rotate(-90deg);
+}
+
+.saved-groups-list,
+.active-streams-list {
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+    overflow-y: auto;
+    max-height: 30vh;
+    /* Default max height */
+}
+
+/* Expanded state implicity has max-height */
+
+.saved-groups-list.collapsed,
+.active-streams-list.collapsed {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    margin: 0;
 }
 
 .saved-group-item {
